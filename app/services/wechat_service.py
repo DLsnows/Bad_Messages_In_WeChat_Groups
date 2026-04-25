@@ -1,7 +1,7 @@
 import threading
 import time
 import logging
-from wxauto4 import WeChat
+from wxauto import WeChat
 
 logger = logging.getLogger(__name__)
 
@@ -63,27 +63,36 @@ class WeChatService:
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(name)
+            wx.ChatWith(who=name)
+
+    def _get_chat(self, name: str):
+        """Get a Chat sub-window object after ChatWith. Returns None if not found."""
+        wx = self._get_wx()
+        try:
+            chat = wx.GetSubWindow(name)
+            return chat
+        except Exception:
+            return None
 
     def get_recent_messages(self, group_name: str, count: int = 30) -> list:
         """Get recent messages from a group."""
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(group_name)
+            wx.ChatWith(who=group_name)
             time.sleep(0.3)
             # Verify the chat window actually switched
-            info = wx.ChatInfo()
-            actual_name = info.get("chat_name", "") if isinstance(info, dict) else str(info)
-            logger.info("ChatWith('%s') -> actual chat: '%s'", group_name, actual_name)
-            if group_name not in str(actual_name):
-                logger.warning(
-                    "ChatWith('%s') may have failed — current chat is '%s'. "
-                    "Group name may not match any WeChat conversation.",
-                    group_name, actual_name,
-                )
+            chat = self._get_chat(group_name)
+            if chat:
+                actual_name = chat.who
+                logger.info("ChatWith('%s') -> actual chat: '%s'", group_name, actual_name)
+                if group_name not in str(actual_name):
+                    logger.warning(
+                        "ChatWith('%s') may have failed — current chat is '%s'. "
+                        "Group name may not match any WeChat conversation.",
+                        group_name, actual_name,
+                    )
             time.sleep(0.3)
-            # GetAllMessage is the documented API (GetHistoryMessage does not exist)
             try:
                 msgs = wx.GetAllMessage()
             except Exception as e:
@@ -97,7 +106,7 @@ class WeChatService:
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(group_name)
+            wx.ChatWith(who=group_name)
             time.sleep(0.3)
             return wx.GetAllMessage()
 
@@ -106,21 +115,14 @@ class WeChatService:
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(group_name)
-            time.sleep(0.3)
-            if at:
-                wx.SendMsg(message, at=at)
-            else:
-                wx.SendMsg(message)
+            wx.SendMsg(message, who=group_name, at=at)
 
     def send_private_message(self, target_name: str, message: str):
         """Send a private message to a contact or WeChat ID."""
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(target_name)
-            time.sleep(0.3)
-            wx.SendMsg(message)
+            wx.SendMsg(message, who=target_name)
 
     def send_private_message_with_check(self, target_name: str, message: str) -> bool:
         """Send a private message with chat-switch verification (retry up to 3 times).
@@ -131,17 +133,17 @@ class WeChatService:
         with self._wx_lock:
             wx = self._get_wx()
             for attempt in range(1, 4):
-                wx.ChatWith(target_name)
+                wx.ChatWith(who=target_name)
                 time.sleep(0.3)
-                info = wx.ChatInfo()
-                actual_name = info.get("chat_name", "") if isinstance(info, dict) else str(info)
-                if target_name in str(actual_name) or str(actual_name) in target_name:
+                chat = self._get_chat(target_name)
+                if chat and (target_name in str(chat.who) or str(chat.who) in target_name):
                     wx.SendMsg(message)
-                    logger.info("DM sent to %s (verified chat='%s')", target_name, actual_name)
+                    logger.info("DM sent to %s (verified chat='%s')", target_name, chat.who)
                     return True
+                actual = chat.who if chat else "None"
                 logger.warning(
                     "DM attempt %d/3: ChatWith('%s') switched to '%s', retrying...",
-                    attempt, target_name, actual_name,
+                    attempt, target_name, actual,
                 )
                 time.sleep(0.3)
             logger.error(

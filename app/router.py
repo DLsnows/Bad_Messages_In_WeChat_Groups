@@ -290,7 +290,7 @@ async def list_wechat_sessions():
     try:
         wechat = WeChatService()
         sessions = wechat.get_session_list()
-        # Sessions may be list of strings or dicts depending on wxauto version
+        # wxauto returns SessionElement objects with .name, .time, .content, etc.
         result = []
         for s in sessions:
             if isinstance(s, str):
@@ -300,6 +300,8 @@ async def list_wechat_sessions():
                     name=s.get("name", s.get("nickname", str(s))),
                     chat_type=s.get("type", ""),
                 ))
+            elif hasattr(s, "name"):
+                result.append(WeChatSessionResponse(name=s.name, chat_type=""))
             else:
                 result.append(WeChatSessionResponse(name=str(s), chat_type=""))
         return result

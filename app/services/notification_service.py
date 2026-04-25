@@ -61,8 +61,7 @@ async def notify_admins(
 
     for admin_name, wechat_id in admins:
         try:
-            target = wechat_id if wechat_id else admin_name
-            sent = wechat.send_private_message_with_check(target, dm_text)
+            sent = wechat.send_private_message_with_check(wechat_id, dm_text)
             if sent:
                 logger.info("DM sent to %s", target)
             else:

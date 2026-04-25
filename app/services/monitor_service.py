@@ -207,13 +207,13 @@ class MonitorService:
                 break
 
             try:
-                # Dump raw message attributes for inspection
                 all_attrs = dir(msg)
-                content = getattr(msg, "content", None) or getattr(msg, "text", "") or ""
-                sender = getattr(msg, "sender", None) or getattr(msg, "name", "") or ""
-                msg_type = getattr(msg, "type", "")
-                # wxauto4 may return non-numeric ids for UI dividers like "2条未读"
-                msg_id_raw = getattr(msg, "id", None) or getattr(msg, "msgid", None)
+                content = getattr(msg, "content", "") or ""
+                sender = getattr(msg, "sender", "") or ""
+                msg_attr = getattr(msg, "attr", "")   # source: self/friend/system/time
+                msg_type = getattr(msg, "type", "")   # content: text/image/video/...
+                msg_id_raw = getattr(msg, "id", None)
+                # wxauto may return non-numeric ids for UI dividers like "2条未读"
                 msg_id = str(msg_id_raw) if msg_id_raw is not None else None
             except Exception as e:
                 logger.debug("[DEBUG] msg#%d: failed to read attributes: %s", idx, e)
@@ -222,15 +222,14 @@ class MonitorService:
             # Log first 3 messages' debug info to help diagnose issues
             if idx < 3:
                 logger.info(
-                    "[DEBUG] msg#%d type=%s sender='%s' content_preview='%s' id=%s attrs=[%s]",
-                    idx, msg_type, sender, content[:60],
-                    msg_id, ",".join(sorted(all_attrs))[:200]
+                    "[DEBUG] msg#%d attr=%s type=%s sender='%s' content_preview='%s' id=%s",
+                    idx, msg_attr, msg_type, sender, content[:60], msg_id,
                 )
 
-            # Skip system messages and self-sent messages
-            if msg_type == "self" or msg_type == "system" or not content:
+            # Skip system messages, self-sent messages, and empty content
+            if msg_attr == "self" or msg_attr == "system" or not content:
                 if idx < 3:
-                    logger.info("[DEBUG] msg#%d skipped: type=%s has_content=%s", idx, msg_type, bool(content))
+                    logger.info("[DEBUG] msg#%d skipped: attr=%s has_content=%s", idx, msg_attr, bool(content))
                 continue
 
             # Keyword matching (case-insensitive)

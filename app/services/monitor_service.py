@@ -214,7 +214,7 @@ class MonitorService:
                 # wxauto4 may return non-numeric ids for UI dividers like "2条未读"
                 msg_id_raw = getattr(msg, "id", None) or getattr(msg, "msgid", None)
                 msg_id = str(msg_id_raw) if msg_id_raw is not None else None
-            except (ValueError, TypeError, AttributeError) as e:
+            except Exception as e:
                 logger.debug("[DEBUG] msg#%d: failed to read attributes: %s", idx, e)
                 continue
 
@@ -277,9 +277,13 @@ class MonitorService:
                 await session.commit()
 
             # LLM review
-            logger.info(
-                "LLM reviewing message from %s in %s (keyword: %s)",
-                sender, group_name, matched_keyword,
+            YELLOW = "\033[33m"
+            RED = "\033[31m"
+            RESET = "\033[0m"
+
+            logger.warning(
+                "%s[LLM REVIEW] Sending message to LLM for review...%s Group=%s Sender=%s Keyword=[%s] Content=[%s]",
+                YELLOW, RESET, group_name, sender, matched_keyword, content[:120],
             )
             verdict = await review_message(group_name, sender, content, llm_config)
 
@@ -298,8 +302,8 @@ class MonitorService:
             # Notify if malicious
             if verdict == "malicious":
                 logger.warning(
-                    "Malicious message confirmed in %s from %s: %s",
-                    group_name, sender, content[:100],
+                    "%s[LLM VERDICT] MALICIOUS — notifying admins%s Group=%s Sender=%s Content=[%s]",
+                    RED, RESET, group_name, sender, content[:100],
                 )
                 await notify_admins(group_name, sender, content, matched_keyword)
 
@@ -314,7 +318,10 @@ class MonitorService:
                     detected.is_notified = True
                     await session.commit()
             else:
-                logger.info("Message deemed %s in %s", verdict or "unreviewable", group_name)
+                logger.warning(
+                    "%s[LLM VERDICT] %s — no action taken%s Group=%s Sender=%s",
+                    YELLOW, (verdict or "unreviewable").upper(), RESET, group_name, sender,
+                )
 
             # Brief pause between messages to avoid UI hammering
             time.sleep(0.3)

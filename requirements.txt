@@ -6,3 +6,4 @@ python-dotenv>=1.0.0
 python-multipart>=0.0.18
 aiohttp>=3.10.0
 wxauto4>=41.0.0
+--upgrade certifi

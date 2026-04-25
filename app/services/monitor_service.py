@@ -186,7 +186,11 @@ class MonitorService:
                 timeout=20,
             )
         except asyncio.TimeoutError:
-            logger.error("Timeout (20s) fetching messages for group '%s'", group_name)
+            logger.error(
+                "Timeout (20s) fetching messages for group '%s' — ChatWith or GetAllMessage hung. "
+                "Verify the group name exactly matches what WeChat shows.",
+                group_name,
+            )
             return
 
         if not messages:

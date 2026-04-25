@@ -54,22 +54,29 @@ class WeChatService:
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(name)
+            wx.ChatWith(name, exact=True)
 
     def get_recent_messages(self, group_name: str, count: int = 30) -> list:
-        """Get recent messages from a group (scrolls up to fetch history)."""
+        """Get recent messages from a group."""
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(group_name)
-            return wx.GetHistoryMessage(count)
+            wx.ChatWith(group_name, exact=True)
+            # Verify the chat window actually switched
+            info = wx.ChatInfo()
+            actual_name = info.get("chat_name", "") if isinstance(info, dict) else str(info)
+            logger.info("ChatWith('%s') -> actual chat: '%s'", group_name, actual_name)
+            # GetAllMessage is the documented API (GetHistoryMessage does not exist)
+            msgs = wx.GetAllMessage()
+            logger.info("Group '%s': GetAllMessage returned %d messages", group_name, len(msgs))
+            return msgs[-count:] if len(msgs) > count else msgs
 
     def get_all_messages(self, group_name: str) -> list:
         """Get all currently visible messages in the chat window."""
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(group_name)
+            wx.ChatWith(group_name, exact=True)
             return wx.GetAllMessage()
 
     def send_group_message(self, group_name: str, message: str, at: list[str] = None):
@@ -77,7 +84,7 @@ class WeChatService:
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(group_name)
+            wx.ChatWith(group_name, exact=True)
             if at:
                 wx.SendMsg(message, at=at)
             else:
@@ -88,7 +95,7 @@ class WeChatService:
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(target_name)
+            wx.ChatWith(target_name, exact=True)
             wx.SendMsg(message)
 
     def is_online(self) -> bool:

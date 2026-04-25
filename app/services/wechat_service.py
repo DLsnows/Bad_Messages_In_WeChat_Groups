@@ -81,7 +81,11 @@ class WeChatService:
                     group_name, actual_name,
                 )
             # GetAllMessage is the documented API (GetHistoryMessage does not exist)
-            msgs = wx.GetAllMessage()
+            try:
+                msgs = wx.GetAllMessage()
+            except Exception as e:
+                logger.error("GetAllMessage failed for group '%s': %s", group_name, e)
+                return []
             logger.info("Group '%s': GetAllMessage returned %d messages", group_name, len(msgs))
             return msgs[-count:] if len(msgs) > count else msgs
 

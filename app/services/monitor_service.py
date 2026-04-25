@@ -205,12 +205,18 @@ class MonitorService:
             if self._stop_event.is_set():
                 break
 
-            # Dump raw message attributes for inspection
-            all_attrs = dir(msg)
-            content = getattr(msg, "content", None) or getattr(msg, "text", "") or ""
-            sender = getattr(msg, "sender", None) or getattr(msg, "name", "") or ""
-            msg_type = getattr(msg, "type", "")
-            msg_id = getattr(msg, "id", None) or getattr(msg, "msgid", None)
+            try:
+                # Dump raw message attributes for inspection
+                all_attrs = dir(msg)
+                content = getattr(msg, "content", None) or getattr(msg, "text", "") or ""
+                sender = getattr(msg, "sender", None) or getattr(msg, "name", "") or ""
+                msg_type = getattr(msg, "type", "")
+                # wxauto4 may return non-numeric ids for UI dividers like "2条未读"
+                msg_id_raw = getattr(msg, "id", None) or getattr(msg, "msgid", None)
+                msg_id = str(msg_id_raw) if msg_id_raw is not None else None
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug("[DEBUG] msg#%d: failed to read attributes: %s", idx, e)
+                continue
 
             # Log first 3 messages' debug info to help diagnose issues
             if idx < 3:

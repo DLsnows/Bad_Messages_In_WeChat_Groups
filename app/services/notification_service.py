@@ -28,8 +28,8 @@ async def notify_admins(
     """
     Notify all active admins about a confirmed malicious message.
 
-    1. @mention each admin in the group with a short alert
-    2. Send each admin a private DM with full details
+    1. ONE group message @mentioning ALL admins at once
+    2. Send each admin a private DM with full details (after verifying chat switch)
     """
     admins = await get_active_admins()
     if not admins:
@@ -37,36 +37,35 @@ async def notify_admins(
         return
 
     wechat = WeChatService()
-    preview = content[:100]
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 1. ONE group message @mentioning ALL admins at once
+    admin_names = [name for name, _ in admins]
+    try:
+        wechat.send_group_message(group_name, "", at=admin_names)
+        logger.info("Sent @mention to %d admins in group %s", len(admin_names), group_name)
+    except Exception as e:
+        logger.error("Failed to @mention admins in group %s: %s", group_name, e)
+
+    time.sleep(0.3)
+
+    # 2. Private DM to each admin with full details (verify chat switched first)
+    dm_text = (
+        f"[可疑消息提醒]\n"
+        f"群聊: {group_name}\n"
+        f"发送者: {sender}\n"
+        f"匹配关键词: {matched_keyword}\n"
+        f"消息内容: {content}\n"
+        f"检测时间: {timestamp}"
+    )
 
     for admin_name, wechat_id in admins:
         try:
-            # 1. @mention in group (at only, no extra text)
-            wechat.send_group_message(
-                group_name,
-                "",
-                at=[admin_name],
-            )
-            logger.info("Sent @mention to %s in group %s", admin_name, group_name)
-        except Exception as e:
-            logger.error("Failed to @mention %s in group %s: %s", admin_name, group_name, e)
-
-        time.sleep(0.3)
-
-        try:
-            # 2. Private DM with full details
-            dm_text = (
-                f"[可疑消息提醒]\n"
-                f"群聊: {group_name}\n"
-                f"发送者: {sender}\n"
-                f"匹配关键词: {matched_keyword}\n"
-                f"消息内容: {content}\n"
-                f"检测时间: {timestamp}"
-            )
-            # Use wechat_id if available, otherwise fall back to admin_name
             target = wechat_id if wechat_id else admin_name
-            wechat.send_private_message(target, dm_text)
-            logger.info("Sent DM to %s", target)
+            sent = wechat.send_private_message_with_check(target, dm_text)
+            if sent:
+                logger.info("DM sent to %s", target)
+            else:
+                logger.error("Failed to send DM to %s: chat switch verification failed", target)
         except Exception as e:
             logger.error("Failed to DM %s: %s", admin_name, e)

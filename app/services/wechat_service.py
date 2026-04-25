@@ -122,6 +122,34 @@ class WeChatService:
             time.sleep(0.3)
             wx.SendMsg(message)
 
+    def send_private_message_with_check(self, target_name: str, message: str) -> bool:
+        """Send a private message with chat-switch verification (retry up to 3 times).
+        Only sends the message if ChatWith actually switched to the target's private chat.
+        Returns True if sent, False if all retries failed.
+        """
+        self._ensure_com()
+        with self._wx_lock:
+            wx = self._get_wx()
+            for attempt in range(1, 4):
+                wx.ChatWith(target_name)
+                time.sleep(0.3)
+                info = wx.ChatInfo()
+                actual_name = info.get("chat_name", "") if isinstance(info, dict) else str(info)
+                if target_name in str(actual_name) or str(actual_name) in target_name:
+                    wx.SendMsg(message)
+                    logger.info("DM sent to %s (verified chat='%s')", target_name, actual_name)
+                    return True
+                logger.warning(
+                    "DM attempt %d/3: ChatWith('%s') switched to '%s', retrying...",
+                    attempt, target_name, actual_name,
+                )
+                time.sleep(0.3)
+            logger.error(
+                "Cannot DM: ChatWith('%s') failed after 3 attempts — message NOT sent",
+                target_name,
+            )
+            return False
+
     def is_online(self) -> bool:
         """Check if WeChat is online."""
         self._ensure_com()

@@ -67,7 +67,11 @@ async def review_message(
                 return None
             data = await resp.json()
             result = data["choices"][0]["message"]["content"].strip().lower()
-            return "malicious" if "malicious" in result else "benign"
+            # Only return "malicious" if the model clearly says malicious
+            # AND does NOT also mention "benign" (avoid false positives)
+            if "malicious" in result and "benign" not in result:
+                return "malicious"
+            return "benign"
 
     except asyncio.TimeoutError:
         logger.error("LLM API timeout for group=%s", group_name)

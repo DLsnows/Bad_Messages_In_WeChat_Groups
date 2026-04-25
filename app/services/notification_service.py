@@ -51,9 +51,7 @@ async def notify_admins(
     except Exception as e:
         logger.error("Failed to @mention admins in group %s: %s", group_name, e)
 
-    time.sleep(0.3)
-
-    # 2. Private DM to each admin with full details (verify chat switched first)
+    # 2. Private DM to each admin with full details
     dm_text = (
         f"[可疑消息提醒]\n"
         f"群聊: {group_name}\n"

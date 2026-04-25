@@ -125,14 +125,16 @@ class WeChatService:
             wx.SendMsg(message, who=target_name)
 
     def send_private_message_with_check(self, target_name: str, message: str) -> bool:
-        """Send a private message. Uses SendMsg(who=) directly (wxauto handles the
-        window switch internally — no unreliable ChatWith/GetSubWindow verification).
-        Returns True (exceptions propagate to caller for logging).
+        """Send a private message: switch to target then send to current window.
+        More reliable than SendMsg(who=) alone for WeChat ID based targets.
         """
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.SendMsg(message, who=target_name)
+            # ChatWith searches by name or WeChat ID, then SendMsg to current window
+            wx.ChatWith(who=target_name)
+            time.sleep(0.5)
+            wx.SendMsg(message)
             logger.info("DM sent to %s", target_name)
             return True
 

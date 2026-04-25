@@ -125,35 +125,16 @@ class WeChatService:
             wx.SendMsg(message, who=target_name)
 
     def send_private_message_with_check(self, target_name: str, message: str) -> bool:
-        """Send a private message with chat-switch verification (retry up to 3 times).
-        Uses a single ChatWith call and polls the sub-window until the switch completes
-        or times out, avoiding interrupting a slow switch with a new ChatWith.
-        Returns True if sent, False if the switch never completed.
+        """Send a private message. Uses SendMsg(who=) directly (wxauto handles the
+        window switch internally — no unreliable ChatWith/GetSubWindow verification).
+        Returns True (exceptions propagate to caller for logging).
         """
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
-            wx.ChatWith(who=target_name)
-            # wxauto UIAutomation can be slow — poll up to 6s for the switch
-            for attempt in range(1, 4):
-                # Progressive waits: 1.5s, then 1.0s, then 1.0s
-                wait = 1.5 if attempt == 1 else 1.0
-                time.sleep(wait)
-                chat = self._get_chat(target_name)
-                if chat and (target_name in str(chat.who) or str(chat.who) in target_name):
-                    wx.SendMsg(message)
-                    logger.info("DM sent to %s (verified chat='%s')", target_name, chat.who)
-                    return True
-                actual = chat.who if chat else "None"
-                logger.warning(
-                    "DM attempt %d/3: ChatWith('%s') switched to '%s', waiting for switch...",
-                    attempt, target_name, actual,
-                )
-            logger.error(
-                "Cannot DM: ChatWith('%s') switch never confirmed after 3 polls — message NOT sent",
-                target_name,
-            )
-            return False
+            wx.SendMsg(message, who=target_name)
+            logger.info("DM sent to %s", target_name)
+            return True
 
     def is_online(self) -> bool:
         """Check if WeChat is online."""

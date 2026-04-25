@@ -1,0 +1,367 @@
+/* ── Reset & Base ────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  font-size: 14px;
+  color: #e0e0e0;
+  background: #1a1a2e;
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #16213e;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-right: 1px solid #0f3460;
+}
+
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  color: #e94560;
+  font-weight: 700;
+}
+
+.sidebar-subtitle {
+  font-size: 11px;
+  color: #8899aa;
+  margin-top: 2px;
+  display: block;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 8px 0;
+}
+
+.nav-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  color: #aabbcc;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: #1a1a3e;
+  color: #e0e0e0;
+}
+
+.nav-item.active {
+  background: #1a1a3e;
+  color: #e94560;
+  border-left-color: #e94560;
+  font-weight: 600;
+}
+
+.nav-icon {
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+/* ── Main Content ───────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  padding: 24px 32px;
+  overflow-y: auto;
+  max-width: calc(100vw - 220px);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+h1 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #f0f0f0;
+  font-weight: 600;
+}
+
+/* ── Status Cards ───────────────────────────────────────── */
+.status-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.status-card {
+  background: #16213e;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #0f3460;
+}
+
+.card-label {
+  font-size: 12px;
+  color: #8899aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+/* ── Bot Controls ───────────────────────────────────────── */
+.bot-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+.btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn:hover { opacity: 0.85; }
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: #0f3460; color: #e0e0e0; }
+.btn-secondary { background: #1a3a5c; color: #aabbcc; border: 1px solid #0f3460; }
+.btn-success { background: #2d6a4f; color: #e0e0e0; }
+.btn-danger { background: #9b2226; color: #e0e0e0; }
+.btn-warning { background: #b8860b; color: #e0e0e0; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-danger-sm { background: #6b1a1a; color: #e0e0e0; padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; }
+
+/* ── Forms ──────────────────────────────────────────────── */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  background: #0d1b2a;
+  border: 1px solid #1e3a5f;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #e94560;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar input, .toolbar select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: #aabbcc;
+  margin-bottom: 4px;
+}
+
+.form-group input {
+  width: 100%;
+  max-width: 400px;
+}
+
+.hint {
+  font-size: 12px;
+  color: #667788;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.save-status {
+  font-size: 13px;
+  color: #52b788;
+  margin-left: 12px;
+}
+
+/* ── Tables ─────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #16213e;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #0f3460;
+}
+
+th {
+  background: #0f3460;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #8899aa;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 10px 14px;
+  border-top: 1px solid #0f3460;
+  font-size: 13px;
+}
+
+tr:hover { background: #1a1a3e; }
+
+/* ── Session List ───────────────────────────────────────── */
+.session-list {
+  background: #0d1b2a;
+  border: 1px solid #1e3a5f;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.session-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.session-item:hover {
+  background: #16213e;
+  color: #e94560;
+}
+
+/* ── Pagination ─────────────────────────────────────────── */
+.pagination-controls {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button {
+  background: #16213e;
+  border: 1px solid #0f3460;
+  color: #aabbcc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.pagination-controls button:hover {
+  background: #0f3460;
+  color: #e0e0e0;
+}
+
+.pagination-controls button.active-page {
+  background: #e94560;
+  color: #fff;
+  border-color: #e94560;
+}
+
+.pagination-info {
+  color: #667788;
+  font-size: 12px;
+}
+
+/* ── Badges ─────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-active { background: #2d6a4f; color: #b7e4c7; }
+.badge-inactive { background: #6b1a1a; color: #e8b4b4; }
+.badge-malicious { background: #9b2226; color: #f0c0c0; }
+.badge-benign { background: #2d6a4f; color: #b7e4c7; }
+.badge-unreviewed { background: #5c4a10; color: #e8d4a0; }
+.badge-notified { background: #1a3a5c; color: #aabbcc; }
+.badge-silent { background: #2a2a3a; color: #667788; }
+
+/* ── Toast ──────────────────────────────────────────────── */
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  animation: slideIn 0.3s ease;
+  max-width: 400px;
+}
+
+.toast-success { background: #2d6a4f; }
+.toast-error { background: #9b2226; }
+.toast-info { background: #0f3460; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #1e3a5f; }
+
+/* ── Settings form ──────────────────────────────────────── */
+.settings-form {
+  max-width: 500px;
+}

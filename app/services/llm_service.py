@@ -11,7 +11,7 @@ REVIEW_PROMPT = (
     "Message content: {content}\n\n"
     "Determine if this message is malicious or benign. Malicious includes: "
     "spam, phishing, fraud, scams, NSFW content, harassment, illegal content, "
-    "excessive advertising, or malicious links.\n\n"
+    "excessive advertising, promotion of academic writing services (including exam-taking services, paid assignment help, and cheating assistance, 代写代做代考in chinese) or malicious links.\n\n"
     "Reply with exactly one word: \"malicious\" or \"benign\"."
 )
 

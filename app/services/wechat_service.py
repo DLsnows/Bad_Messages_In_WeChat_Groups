@@ -17,7 +17,7 @@ class WeChatService:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
                     cls._instance._wx = None
-                    cls._instance._wx_lock = threading.Lock()
+                    cls._instance._wx_lock = threading.RLock()
                     cls._instance._wx_owner_thread = None
         return cls._instance
 

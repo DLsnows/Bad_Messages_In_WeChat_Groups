@@ -67,6 +67,18 @@ class MonitorService:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
+        # Force WeChat instance creation on this thread (COM thread affinity).
+        # WeChatService is a singleton, but COM objects must be used from
+        # the thread that created them. We create it here once and never
+        # dispatch wxauto calls to other threads via asyncio.to_thread.
+        wechat = WeChatService()
+        try:
+            online = wechat.is_online()
+            logger.info("WeChat instance ready on monitor thread %d (online=%s)",
+                        threading.current_thread().ident, online)
+        except Exception as e:
+            logger.error("Failed to initialize WeChat on monitor thread: %s", e)
+
         try:
             while not self._stop_event.is_set():
                 try:
@@ -179,22 +191,11 @@ class MonitorService:
         history_count: int,
     ):
         """Check messages in a single group."""
-        # Fetch messages with timeout — wxauto calls can hang indefinitely
-        try:
-            messages = await asyncio.wait_for(
-                asyncio.to_thread(wechat.get_recent_messages, group_name, history_count),
-                timeout=20,
-            )
-        except asyncio.TimeoutError:
-            logger.error(
-                "Timeout (20s) fetching messages for group '%s' — ChatWith or GetAllMessage hung. "
-                "Verify the group name exactly matches what WeChat shows.",
-                group_name,
-            )
-            return
+        # Sync wxauto call — must run on the monitor thread (COM thread affinity), NOT via asyncio.to_thread
+        messages = wechat.get_recent_messages(group_name, history_count)
 
         if not messages:
-            logger.warning("[DEBUG] Group '%s': GetHistoryMessage returned empty list", group_name)
+            logger.warning("[DEBUG] Group '%s': GetAllMessage returned empty list", group_name)
             return
 
         logger.info("[DEBUG] Group '%s': fetched %d messages, scanning with %d keywords",

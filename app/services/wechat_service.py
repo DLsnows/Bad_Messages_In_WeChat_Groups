@@ -18,6 +18,7 @@ class WeChatService:
                     cls._instance = super().__new__(cls)
                     cls._instance._wx = None
                     cls._instance._wx_lock = threading.Lock()
+                    cls._instance._wx_owner_thread = None
         return cls._instance
 
     def _ensure_com(self):
@@ -29,14 +30,21 @@ class WeChatService:
             pass
 
     def _get_wx(self):
-        """Lazy-init WeChat instance."""
+        """Lazy-init WeChat instance. Must only be used from the thread that created it (COM thread affinity)."""
+        current_thread = threading.current_thread().ident
+        if self._wx is not None and self._wx_owner_thread != current_thread:
+            logger.warning(
+                "WeChat accessed from thread %d but owned by thread %d — COM calls may fail!",
+                current_thread, self._wx_owner_thread,
+            )
         if self._wx is None:
             with self._wx_lock:
                 if self._wx is None:
                     self._ensure_com()
                     try:
                         self._wx = WeChat()
-                        logger.info("WeChat instance created")
+                        self._wx_owner_thread = threading.current_thread().ident
+                        logger.info("WeChat instance created on thread %d", self._wx_owner_thread)
                     except Exception as e:
                         logger.error("Failed to create WeChat instance: %s", e)
                         raise

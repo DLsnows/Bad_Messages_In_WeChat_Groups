@@ -305,18 +305,31 @@ class MonitorService:
                     "%s[LLM VERDICT] MALICIOUS — notifying admins%s Group=%s Sender=%s Content=[%s]",
                     RED, RESET, group_name, sender, content[:100],
                 )
-                await notify_admins(group_name, sender, content, matched_keyword)
+                # PAUSE: scanning suspended while sending notifications (avoid UI conflicts)
+                notified = await notify_admins(group_name, sender, content, matched_keyword)
 
-                async with async_session_maker() as session:
-                    result = await session.execute(
-                        select(DetectedMessage).where(
-                            DetectedMessage.content_hash == content_hash,
-                            DetectedMessage.group_name == group_name,
+                if notified:
+                    async with async_session_maker() as session:
+                        result = await session.execute(
+                            select(DetectedMessage).where(
+                                DetectedMessage.content_hash == content_hash,
+                                DetectedMessage.group_name == group_name,
+                            )
                         )
+                        detected = result.scalar_one()
+                        detected.is_notified = True
+                        await session.commit()
+                    logger.info(
+                        "%s[NOTIFY DONE] Notifications sent, resuming scanning%s",
+                        YELLOW, RESET,
                     )
-                    detected = result.scalar_one()
-                    detected.is_notified = True
-                    await session.commit()
+                else:
+                    logger.error(
+                        "%s[NOTIFY FAILED] could not send notifications — message NOT marked as notified%s",
+                        RED, RESET,
+                    )
+                # Extra pause after notifications so wxauto UI settles
+                time.sleep(1.0)
             else:
                 logger.warning(
                     "%s[LLM VERDICT] %s — no action taken%s Group=%s Sender=%s",

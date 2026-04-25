@@ -5,5 +5,5 @@ aiosqlite>=0.20.0
 python-dotenv>=1.0.0
 python-multipart>=0.0.18
 aiohttp>=3.10.0
-wxauto
+weixin-auto
 certifi

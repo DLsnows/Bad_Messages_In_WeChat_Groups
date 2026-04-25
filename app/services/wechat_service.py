@@ -80,7 +80,7 @@ class WeChatService:
         with self._wx_lock:
             wx = self._get_wx()
             wx.ChatWith(who=group_name)
-            time.sleep(0.3)
+            time.sleep(1.0)
             # Verify the chat window actually switched
             chat = self._get_chat(group_name)
             if chat:
@@ -126,15 +126,19 @@ class WeChatService:
 
     def send_private_message_with_check(self, target_name: str, message: str) -> bool:
         """Send a private message with chat-switch verification (retry up to 3 times).
-        Only sends the message if ChatWith actually switched to the target's private chat.
-        Returns True if sent, False if all retries failed.
+        Uses a single ChatWith call and polls the sub-window until the switch completes
+        or times out, avoiding interrupting a slow switch with a new ChatWith.
+        Returns True if sent, False if the switch never completed.
         """
         self._ensure_com()
         with self._wx_lock:
             wx = self._get_wx()
+            wx.ChatWith(who=target_name)
+            # wxauto UIAutomation can be slow — poll up to 6s for the switch
             for attempt in range(1, 4):
-                wx.ChatWith(who=target_name)
-                time.sleep(0.3)
+                # Progressive waits: 1.5s, then 1.0s, then 1.0s
+                wait = 1.5 if attempt == 1 else 1.0
+                time.sleep(wait)
                 chat = self._get_chat(target_name)
                 if chat and (target_name in str(chat.who) or str(chat.who) in target_name):
                     wx.SendMsg(message)
@@ -142,12 +146,11 @@ class WeChatService:
                     return True
                 actual = chat.who if chat else "None"
                 logger.warning(
-                    "DM attempt %d/3: ChatWith('%s') switched to '%s', retrying...",
+                    "DM attempt %d/3: ChatWith('%s') switched to '%s', waiting for switch...",
                     attempt, target_name, actual,
                 )
-                time.sleep(0.3)
             logger.error(
-                "Cannot DM: ChatWith('%s') failed after 3 attempts — message NOT sent",
+                "Cannot DM: ChatWith('%s') switch never confirmed after 3 polls — message NOT sent",
                 target_name,
             )
             return False

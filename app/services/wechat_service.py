@@ -1,4 +1,5 @@
 import threading
+import time
 import logging
 from wxauto4 import WeChat
 
@@ -70,6 +71,7 @@ class WeChatService:
         with self._wx_lock:
             wx = self._get_wx()
             wx.ChatWith(group_name)
+            time.sleep(0.3)
             # Verify the chat window actually switched
             info = wx.ChatInfo()
             actual_name = info.get("chat_name", "") if isinstance(info, dict) else str(info)
@@ -80,6 +82,7 @@ class WeChatService:
                     "Group name may not match any WeChat conversation.",
                     group_name, actual_name,
                 )
+            time.sleep(0.3)
             # GetAllMessage is the documented API (GetHistoryMessage does not exist)
             try:
                 msgs = wx.GetAllMessage()
@@ -95,6 +98,7 @@ class WeChatService:
         with self._wx_lock:
             wx = self._get_wx()
             wx.ChatWith(group_name)
+            time.sleep(0.3)
             return wx.GetAllMessage()
 
     def send_group_message(self, group_name: str, message: str, at: list[str] = None):
@@ -103,6 +107,7 @@ class WeChatService:
         with self._wx_lock:
             wx = self._get_wx()
             wx.ChatWith(group_name)
+            time.sleep(0.3)
             if at:
                 wx.SendMsg(message, at=at)
             else:
@@ -114,6 +119,7 @@ class WeChatService:
         with self._wx_lock:
             wx = self._get_wx()
             wx.ChatWith(target_name)
+            time.sleep(0.3)
             wx.SendMsg(message)
 
     def is_online(self) -> bool:

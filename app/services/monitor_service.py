@@ -181,6 +181,7 @@ class MonitorService:
                 )
             except Exception as e:
                 logger.error("Error checking group '%s': %s", group.group_name, e)
+            time.sleep(0.3)
 
     async def _check_group(
         self,

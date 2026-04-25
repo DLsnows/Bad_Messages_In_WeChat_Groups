@@ -10,7 +10,7 @@
 <nav class="sidebar">
   <div class="sidebar-header">
     <h2>群聊监控</h2>
-    <span class="sidebar-subtitle">Bad Messages Monitor</span>
+    <span class="sidebar-subtitle">Bad_Messages_In_WeChat_Groups</span>
   </div>
   <ul class="nav-list">
     <li class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
@@ -73,9 +73,9 @@
     <div class="toolbar">
       <input type="text" id="group-name-input" placeholder="输入群聊名称">
       <button class="btn btn-primary" onclick="addGroup()">添加群组</button>
-      <button class="btn btn-secondary" onclick="discoverSessions()">从微信加载</button>
+
     </div>
-    <div id="session-list" class="session-list" style="display:none"></div>
+
     <table id="groups-table">
       <thead><tr><th>群名称</th><th>状态</th><th>添加时间</th><th>操作</th></tr></thead>
       <tbody id="groups-tbody"></tbody>

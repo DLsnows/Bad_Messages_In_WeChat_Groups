@@ -141,29 +141,6 @@ async function toggleGroup(id) {
   }
 }
 
-async function discoverSessions() {
-  try {
-    const sessions = await api('GET', '/api/v1/wechat/sessions');
-    const container = document.getElementById('session-list');
-    if (!sessions.length) {
-      container.innerHTML = '<div class="session-item">未获取到会话列表，请确保微信已登录</div>';
-      container.style.display = 'block';
-      return;
-    }
-    container.innerHTML = sessions.map(s =>
-      `<div class="session-item" onclick="fillGroupName('${escapeHtml(s.name)}')">${escapeHtml(s.name)} ${s.chat_type ? '(' + s.chat_type + ')' : ''}</div>`
-    ).join('');
-    container.style.display = 'block';
-  } catch (e) {
-    showToast('获取会话失败: ' + e.message, 'error');
-  }
-}
-
-function fillGroupName(name) {
-  document.getElementById('group-name-input').value = name;
-  document.getElementById('session-list').style.display = 'none';
-}
-
 /* ── Admins ─────────────────────────────────────────────── */
 async function loadAdmins() {
   try {

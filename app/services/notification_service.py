@@ -1,4 +1,5 @@
 import logging
+import time
 from datetime import datetime
 from sqlalchemy import select
 from app.database import async_session_maker
@@ -41,16 +42,17 @@ async def notify_admins(
 
     for admin_name, wechat_id in admins:
         try:
-            # 1. @mention in group
+            # 1. @mention in group (at only, no extra text)
             wechat.send_group_message(
                 group_name,
-                f"@{admin_name} 检测到可疑消息 匹配关键词: [{matched_keyword}]\n"
-                f"发送者: {sender}\n内容预览: {preview}",
+                "",
                 at=[admin_name],
             )
             logger.info("Sent @mention to %s in group %s", admin_name, group_name)
         except Exception as e:
             logger.error("Failed to @mention %s in group %s: %s", admin_name, group_name, e)
+
+        time.sleep(0.3)
 
         try:
             # 2. Private DM with full details
